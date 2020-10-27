@@ -4,5 +4,6 @@ import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 
 contract DANC is ERC20{
     constructor(address owner_address) ERC20("DANC COIN", "DNC") public{
+        _mint(owner_address, 1000000);
     }
 } 

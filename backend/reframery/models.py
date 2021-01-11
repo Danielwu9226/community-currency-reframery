@@ -107,3 +107,12 @@ class Order(models.Model):
     quantity = models.IntegerField()
     status = models.CharField(max_length=255)
     transaction_id = models.ForeignKey(Transaction, on_delete=models.CASCADE)
+
+class Wallet(models.Model):
+    customUser = models.OneToOneField(
+        CustomUser,
+        on_delete=models.CASCADE,
+        primary_key=True,
+    )
+    address = models.CharField(max_length=255)
+    private_key = models.CharField(max_length=255)

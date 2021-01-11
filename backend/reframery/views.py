@@ -4,7 +4,7 @@ from reframery.models import CustomUser
 from datetime import datetime
 
 # Create your views here.
-
+    
 def checkInvalidRoutes(method, route_list):
     return method in route_list
     

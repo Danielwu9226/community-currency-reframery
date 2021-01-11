@@ -109,6 +109,10 @@ class Order(models.Model):
     transaction_id = models.ForeignKey(Transaction, on_delete=models.CASCADE)
 
 class Wallet(models.Model):
-    user_id = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    customUser = models.OneToOneField(
+        CustomUser,
+        on_delete=models.CASCADE,
+        primary_key=True,
+    )
     address = models.CharField(max_length=255)
     private_key = models.CharField(max_length=255)

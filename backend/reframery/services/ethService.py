@@ -16,7 +16,7 @@ def generate_eth_account():
 
 # use origin private key to sign transaction and send to the network
 def send_transaction(tx, key):
-    sign_tx = web3.eth.account.signTransaction(tx, private_key1)
+    sign_tx = web3.eth.account.signTransaction(tx, key)
     tx_hash = web3.eth.sendRawTransaction(sign_tx.rawTransaction)
     return tx_hash
 

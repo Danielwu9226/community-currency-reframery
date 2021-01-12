@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 import json 
 from reframery.models import CustomUser, Wallet
-from reframery.services.ethService import generate_eth_account
+from reframery.services.ethService import generate_eth_account, transfer
 from datetime import datetime
 
 # Create your views here.
@@ -121,3 +121,37 @@ def EmailConfirmationView(request, verification_code):
                 "message": "Email successfully verified.",
                 "http_code": "200"
             })
+
+
+def TransferTokens(request):
+    
+    data = json.loads(request.body)
+    senderEmail = data['senderEmail']
+    receiverEmail = data['receiverEmail']
+    amount = data['amount']
+
+    if not checkIfUserExists(senderEmail):
+        return JsonResponse({
+                    "message": "Sender does not exist",
+                    "http_code": "404"
+                })
+
+    if not checkIfUserExists(receiverEmail):
+        return JsonResponse({
+                    "message": "Receiver does not exist",
+                    "http_code": "404"
+                })
+
+    sender = getUser(senderEmail)
+    sender_address = sender.wallet.address
+    sender_key = sender.wallet.private_key
+    
+    receiver = getUser(receiverEmail)
+    receiver_address = receiver.wallet.address
+
+    tx_hash = transfer(sender_address, sender_key, receiver_address, amount)
+    print(tx_hash)
+    return JsonResponse({
+        "message": f"{tx_hash.hex()}",
+        "http_code": "200"
+    })

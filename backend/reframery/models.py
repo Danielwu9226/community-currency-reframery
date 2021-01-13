@@ -108,10 +108,10 @@ class Order(models.Model):
     status = models.CharField(max_length=255)
     transaction_id = models.ForeignKey(Transaction, on_delete=models.CASCADE)
 
-"""
-:description: Wallet information. Has a one to one relationship customUser.
-"""
 class Wallet(models.Model):
+    """
+    :description: Wallet information. Has a one to one relationship customUser.
+    """
     customUser = models.OneToOneField(
         CustomUser,
         on_delete=models.CASCADE,

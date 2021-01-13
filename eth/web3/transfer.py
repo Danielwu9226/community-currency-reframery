@@ -7,27 +7,37 @@ with open("config.json") as config:
 with open("../build/contracts/DANC.json") as contract_config:
     contract_config = json.load(contract_config)
 
-# test accounts. Using ropsten test network for testing
-add1 = config["test_accounts"]["account1"]["address"]
-add2 = config["test_accounts"]["account2"]["address"]
-private_key1 = config["test_accounts"]["account1"]["key"]
-
+# Connect to ethereum node specified in config file
 web3 = Web3(Web3.HTTPProvider(config["http_provider"]))
-
+# Get the deployed DANC erc20 ethereum contract
 contract = web3.eth.contract(address=config["contract_address"], abi=contract_config["abi"])
 
-# use origin private key to sign transaction and send to the network
 def send_transaction(tx, key):
-    sign_tx = web3.eth.account.signTransaction(tx, private_key1)
+    """
+    :description: Use the sender's private key to sign transaction and send to network
+    :param tx: Transaction to be sent
+    :param key: Sender's Etherem private key
+    :return: Transaction hash. This can be used to look up the transaction in the blockchain.
+    """
+    sign_tx = web3.eth.account.signTransaction(tx, key)
     tx_hash = web3.eth.sendRawTransaction(sign_tx.rawTransaction)
     return tx_hash
 
-# transfer DANC tokens from origin to destination address
-def transfer(origin, origin_key, destination, amount):
-    nonce = web3.eth.getTransactionCount(origin)
-    tx = contract.functions.transfer(destination, amount).buildTransaction({'nonce': nonce,'from': origin})
-    tx_hash = send_transaction(tx, origin_key)
-    return tx_hash
 
-# transfer(add1, private_key1, add2, 1)
-# print(contract.functions.balanceOf(add1).call())
+def transfer(senderAddress, senderPrivateKey, receiverAddress, amount):
+    """
+    :description: Transfer DANC tokens from sender wallet to receiver wallet
+    :param senderAddress: Sender's ethereum address
+    :param senderPrivateKey: Sender's etherem private key
+    :param receiverAddress: Receiver's etherem address
+    :param amount: Amount of DANC tokens to send
+    :return: transaction hash. This can be used to look up the transaction in the blockchain.
+    """
+    # get the nonce of the sender's ethereum account
+    nonce = web3.eth.getTransactionCount(senderAddress)
+
+    # build the transaction to be sent to the network
+    tx = contract.functions.transfer(receiverAddress, amount).buildTransaction({'nonce': nonce,'from': senderAddress})
+
+    tx_hash = send_transaction(tx, senderPrivateKey)
+    return tx_hash

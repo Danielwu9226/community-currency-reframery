@@ -14,4 +14,5 @@ urlpatterns = [
             path('register/', views.RegisterView),
             path('forgotpassword/', views.ForgotPasswordView),
             path('verify/<verification_code>', views.EmailConfirmationView),
+            path('transfertokens/', views.TransferTokens)
         ]

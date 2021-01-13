@@ -6,5 +6,9 @@ with open("config.json") as config:
 web3 = Web3(Web3.HTTPProvider(config["http_provider"]))
 
 def create_eth_account():
+    """
+    :description: Generate an ethereum account
+    :return: Account and Address and privateKey
+    """
     account = web3.eth.account.create()
     return { "address": account._address, "publicKey": account._private_key }

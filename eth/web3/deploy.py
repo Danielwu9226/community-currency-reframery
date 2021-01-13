@@ -1,7 +1,8 @@
+# This is for deploying the new smart contract after a rebuild
+
 import json
 from web3 import Web3
 
-# This is for deploying the new smart contract after a rebuild
 with open("config.json") as config:
     config = json.load(config)
 

@@ -31,5 +31,5 @@ urlpatterns = [
             path('createItem', views.CreateItemView),
             path('updateItem', views.UpdateItemView),
             path('getItem', views.GetItemView),
-            
+            path('transfertokens/', views.TransferTokens)
         ]

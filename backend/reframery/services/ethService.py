@@ -1,16 +1,24 @@
 import json
 from web3 import Web3
+from pathlib import Path
 
-with open("config.json") as config:
+base_path = Path(__file__).parent
+
+with open(str(base_path) + "/eth-config.json") as config:
     config = json.load(config)
-
-with open("../build/contracts/DANC.json") as contract_config:
-    contract_config = json.load(contract_config)
 
 # Connect to ethereum node specified in config file
 web3 = Web3(Web3.HTTPProvider(config["http_provider"]))
 # Get the deployed DANC erc20 ethereum contract
-contract = web3.eth.contract(address=config["contract_address"], abi=contract_config["abi"])
+contract = web3.eth.contract(address=config["contract_address"], abi=config["contract"]["abi"])
+
+def generate_eth_account():
+    """
+    :description: Generate an ethereum account
+    :return: Account and Address and privateKey
+    """
+    account = web3.eth.account.create()
+    return { "address": account._address, "privateKey": account._private_key.hex() }
 
 def send_transaction(tx, key):
     """

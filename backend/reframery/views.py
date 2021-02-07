@@ -1,7 +1,6 @@
 from django.http import JsonResponse
 import json 
 from reframery.models import CustomUser, SubCategory, Order, Item, Wallet
-from reframery.models import CustomUser, Wallet
 from reframery.services.ethService import generate_eth_account, transfer
 from datetime import datetime
 
@@ -40,6 +39,8 @@ def checkIfUserExists(email):
 def getUser(email):
     return CustomUser.objects.filter(email=email)[0]
 
+def getUserById(user_id):
+    return CustomUser.objects.filter(id = user_id)[0]
 
 def isInvalidVerificationCode(verification_code):
     return len(CustomUser.objects.filter(validate_code=verification_code)) != 1
@@ -158,10 +159,11 @@ def CreateSubCategoryView(request):
     data = json.loads(request.body)
     name = data['name']
     user_id = data['user_id']
-    subcategory = SubCategory(name, user_id)
+    user = getUserById(user_id)
+    subcategory = SubCategory(name = name, user_id = user)
     subcategory.save()
     return JsonResponse({
-                "data": subcategory,
+                "data": {"name": subcategory.name},
                 "http_code": "201"
             })
 

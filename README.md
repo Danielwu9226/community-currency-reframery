@@ -13,7 +13,7 @@ python manage.py migrate
 ```
 5. Start server
 ```
-python manage.py startserver
+python manage.py runserver
 ```
 6. Open postman and make a post request with 'email' and 'password' fields in the request to the /register endpoint to create a user
 7. Open python shell and edit user's wallet manually to use contract owner ethereum private key (this use currently holds 99% of DANC tokens). Private key can be found in 

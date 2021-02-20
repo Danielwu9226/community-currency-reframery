@@ -16,7 +16,7 @@ def s3():
                 upload_file_key = 'user_images/' + str(file)
                 client.upload_file(file, AWS_STORE_BUCKET_NAME, upload_file_key)
 
-            url = (f'https://{AWS_STORE_BUCKET_NAME}.s3.amazonaws.com/{upload_file_key}')
+                url = (f'https://{AWS_STORE_BUCKET_NAME}.s3.amazonaws.com/{upload_file_key}')
             
     return url
 

@@ -20,5 +20,3 @@ jobs:
           name: Running tests
           command: |
             . venv/bin/activate
-            
-      

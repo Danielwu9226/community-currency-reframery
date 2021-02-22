@@ -4,6 +4,8 @@ from reframery.models import CustomUser, SubCategory, Order, Item, Wallet
 from reframery.models import CustomUser, Wallet
 from reframery.services.ethService import generate_eth_account, transfer
 from datetime import datetime
+from django.core import serializers
+from django.forms.models import model_to_dict
 
 
 # Create your views here.
@@ -40,6 +42,8 @@ def checkIfUserExists(email):
 def getUser(email):
     return CustomUser.objects.filter(email=email)[0]
 
+def getUserById(id):
+    return CustomUser.objects.filter(id = id)[0]
 
 def isInvalidVerificationCode(verification_code):
     return len(CustomUser.objects.filter(validate_code=verification_code)) != 1
@@ -138,18 +142,18 @@ def EmailConfirmationView(request, verification_code):
 def GetAdminUsersView(request):
     if checkInvalidRoutes(request.method, ["POST", "PUT", "DELETE"]):
         return handleInvalidRouteJson()
-    data = list(CustomUser.objects.filter(admin = 1))
+    data = CustomUser.objects.filter(admin = 1).values()
     return JsonResponse({
-                "data": data,
+                "data": list(data),
                 "http_code": "200"
             })
 
 def GetUnvalidatedUsersView(request):
     if checkInvalidRoutes(request.method, ["POST", "PUT", "DELETE"]):
         return handleInvalidRouteJson()
-    data = list(CustomUser.objects.filter(validate_status = 0))
+    data = CustomUser.objects.filter(validate_status = 0).values()
     return JsonResponse({
-                "data": data,
+                "data": list(data),
                 "http_code": "200"
             })
 def CreateSubCategoryView(request):
@@ -158,10 +162,12 @@ def CreateSubCategoryView(request):
     data = json.loads(request.body)
     name = data['name']
     user_id = data['user_id']
-    subcategory = SubCategory(name, user_id)
+    user = getUserById(user_id)
+    subcategory = SubCategory(name = name, user_id = user)
     subcategory.save()
+    obj = model_to_dict(subcategory)
     return JsonResponse({
-                "data": subcategory,
+                "data": obj,
                 "http_code": "201"
             })
 
@@ -170,9 +176,9 @@ def GetSubCategoriesView(request):
         return handleInvalidRouteJson()
     data = json.loads(request.body)
     user_id = data['user_id']
-    result = list(SubCategory.objects.filter(user_id = user_id))
+    result = SubCategory.objects.filter(user_id = user_id).values()
     return JsonResponse({
-                "data": result,
+                "data": list(result),
                 "http_code": "200"
             })
 
@@ -199,9 +205,9 @@ def GetOrderView(request):
         return handleInvalidRouteJson()
     data = json.loads(request.body)
     order_id = data['id']
-    result = list(Order.objects.filter(id = order_id))
+    result = Order.objects.filter(id = order_id).values()
     return JsonResponse({
-                "data": result,
+                "data": list(result),
                 "http_code": "200"
             })
 #TODO:
@@ -226,7 +232,7 @@ def CreateItemView(request):
     user_id = data['user_id']
     image = ""
     
-    item = Item(category, name, image, price, stock, desc, discount, subcategory_id, user_id)
+    item = Item(category = category, name = name, image = image, price = price, stock = stock, desc = desc, discount = discount, subcategory_id = subcategory_id, user_id = user_id)
     item.save()
     return JsonResponse({
             "data": item,

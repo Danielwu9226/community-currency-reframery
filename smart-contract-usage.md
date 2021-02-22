@@ -1,7 +1,7 @@
 # Introduction
 Our community currency is implemented as a fungible token that can be exchanged between users on the Ethereum blockchain. Interactions with our smart contract will be abstracted by MetaMask and the frontend currently in development by the Aquafina team. 
 
-This document will teach you how to test our smart contract using MetaMask and MEW. Our smart contract is currently deployed on the Ropsten test network so no real money will be needed for this test. 
+This document will teach you how to test our smart contract using MetaMask and MEW. Our smart contract is currently deployed on the Ropsten test network so no real money will be used for this test. 
 
 
 # Setup 

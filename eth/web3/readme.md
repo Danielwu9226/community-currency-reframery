@@ -1,0 +1,1 @@
+This old code no longer used. All interactions with the DANC smart contract now lives in the frontend. Keeping this old code here as an example for our frontend team Aquafina. 

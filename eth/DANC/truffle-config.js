@@ -72,11 +72,6 @@ module.exports = {
     // network_id: 2111,   // This network is yours, in the cloud.
     // production: true    // Treats this network as if it was a public net. (default: false)
     // }
-    development: {
-      host: "127.0.0.1",     // default for Ganache
-      port: 7545,            // default for Ganache
-      network_id: "*"        // Any network (default: none)
-     }
   },
 
   // Set default mocha options here, use special reporters etc.
@@ -97,6 +92,6 @@ module.exports = {
       //  },
       //  evmVersion: "byzantium"
       // }
-    },
-  },
+    }
+  }
 };

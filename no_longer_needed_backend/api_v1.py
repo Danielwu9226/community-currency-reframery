@@ -1,0 +1,8 @@
+@app.route('/login', methods=["GET", "POST"])
+@app.route('/register', methods=["GET", "POST"])
+@app.route('forgot-password', methods=["GET", "POST"])
+@app.route('transaction/<txid>', methods=["GET"])
+@app.route('balance', methods=["GET"])
+@app.route('send_tx', methods=["GET", "POST"])
+@app.route('receive_tx', methods=["GET", "POST"])
+@app.route('get_txid_for_user', methods=["GET"])

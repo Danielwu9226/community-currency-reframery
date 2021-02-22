@@ -83,7 +83,7 @@ def RegisterView(request):
     return JsonResponse({
         "message": "User successfully created.",
         "http_code": "200",
-        "jwt": user.token()
+        "jwt": user.token
     })
 
 
@@ -100,7 +100,7 @@ def LoginView(request):
     if not user.check_password(password):
         return authFailedJson()
 
-    return JsonResponse({"jwt": user.token()})
+    return JsonResponse({"jwt": user.token})
 
 
 def ForgotPasswordView(request):

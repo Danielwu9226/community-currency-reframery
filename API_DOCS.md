@@ -8,11 +8,18 @@ https://www.postman.com/
 Run the server with: python manage.py runserver
 
 For the /register function, in postman follow the screenshot:
+![postman_register.png](/readme-assets/postman_register.png?raw=true "postman_register") 
 
- 
+Notice the URL should start with 127.0.0.1:8000/register. The method should be POST, the body should be of type JSON (application/json) and the data should contain email and password.
+
+Press send and notice the following response:
+![postman_register_create_user.png](/readme-assets/postman_register_create_user.png?raw=true "postman_register_create_user.png") 
+
+If the user already exists, this will be the response:
+![postman_register_user_exists.png](/readme-assets/postman_register_user_exists.png?raw=true "postman_register_user_exists") 
 
 
-
+The API documentation is below:
 /register:
 ```
 Register: /register

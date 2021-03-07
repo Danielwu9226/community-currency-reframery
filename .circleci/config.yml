@@ -47,4 +47,4 @@ jobs:
           name: Running tests
           command: |
             . venv/bin/activate
-            python ./backend/manage.py tests.py
+            python ./backend/manage.py tests

@@ -10,9 +10,9 @@ from django.urls import path
 from . import views 
 
 urlpatterns = [
-            path('login/', views.LoginView),
-            path('register/', views.RegisterView),
-            path('forgotpassword/', views.ForgotPasswordView),
+            path('login', views.LoginView),
+            path('register', views.RegisterView),
+            path('forgotpassword', views.ForgotPasswordView),
             path('verify/<verification_code>', views.EmailConfirmationView),
             path('getAdminUsers', views.GetAdminUsersView),
             path('getUnvalidatedUsers', views.GetUnvalidatedUsersView),
@@ -22,7 +22,6 @@ urlpatterns = [
             #TODO:
             path('createOrder', views.CreateOrderView),
             #TODO:
-            path('updateOrder', views.UpdateOrderView),
             path('getOrder', views.GetOrderView),
             #TODO:
             path('getOrdersOfBuyer', views.GetOrdersOfBuyer),
@@ -32,5 +31,5 @@ urlpatterns = [
             path('updateItem', views.UpdateItemView),
             path('getItem', views.GetItemView),
             path('deleteItem', views.DeleteItemView),
-            path('transfertokens/', views.TransferTokens)
+            path('transfertokens', views.TransferTokens)
         ]

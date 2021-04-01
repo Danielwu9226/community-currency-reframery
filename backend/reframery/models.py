@@ -94,10 +94,6 @@ class Feedback(models.Model):
     description = models.TextField()
 
 class Transaction(models.Model):
-    sender_id = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name = 'sender_id')
-    receiver_id = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name = 'receiver_id')
-    time = models.DateTimeField(auto_now = True)
-    amount = models.IntegerField()
     txid = models.CharField(max_length=255)
 
 class Order(models.Model):

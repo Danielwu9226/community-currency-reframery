@@ -1,11 +1,12 @@
 from django.http import JsonResponse
 import json 
-from reframery.models import CustomUser, SubCategory, Order, Item, Wallet
+from reframery.models import CustomUser, SubCategory, Order, Item, Wallet, Transaction
 from reframery.models import CustomUser, Wallet
 from reframery.services.ethService import generate_eth_account, transfer
 from datetime import datetime
 from django.core import serializers
 from django.forms.models import model_to_dict
+from django.core.validators import validate_email
 
 
 # Create your views here.
@@ -16,8 +17,8 @@ def checkInvalidRoutes(method, route_list):
 
 def handleInvalidRouteJson():
     return JsonResponse({
-        "message": "Invalid Route",
-        "http_code": "401 Unauthorized"
+        "message": "Invalid Method",
+        "http_code": "400 Bad Request"
     })
 
 
@@ -52,21 +53,39 @@ def isInvalidVerificationCode(verification_code):
 def getUserFromVerificationCode(verification_code):
     return CustomUser.objects.filter(validate_code=verification_code)[0]
 
+def getSubCategoryFromId(id):
+    return SubCategory.objects.filter(id = id)[0]
+
+def getItemById(id):
+    return Item.objects.filter(id = id)[0]
 
 def RegisterView(request):
     if checkInvalidRoutes(request.method, ["GET", "PUT", "DELETE"]):
         return handleInvalidRouteJson()
-
     data = json.loads(request.body)
+    
+    params = ["email", "password"]
+    validated_params = [param in data for param in params]
+    if not all(validated_params):
+        return JsonResponse({
+            "message": "Invalid params",
+            "http_code": "401"
+        })
+    
     email = data['email']
     password = data['password']
-
     if checkIfUserExists(email):
         return JsonResponse({
             "message": "User already exists.",
             "http_code": "404"
         })
-
+    try: 
+        validate_email(email)
+    except:
+        return JsonResponse({
+            "message": "Invalid email format",
+            "http_code": "401"
+        })
     user = CustomUser(email=email)
     user.set_password(password)
     user.save()
@@ -81,9 +100,6 @@ def RegisterView(request):
 
     verification_code = user.validate_code
 
-    # TODO:
-    # sendVerificationEmail(email, verification_code)
-
     return JsonResponse({
         "message": "User successfully created.",
         "http_code": "200",
@@ -96,6 +112,15 @@ def LoginView(request):
         return handleInvalidRouteJson()
 
     data = json.loads(request.body)
+    
+    params = ["email", "password"]
+    validated_params = [param in data for param in params]
+    if not all(validated_params):
+        return JsonResponse({
+            "message": "Invalid params",
+            "http_code": "400"
+        })
+    
     email = data['email']
     password = data['password']
     if not checkIfUserExists(email):
@@ -112,11 +137,31 @@ def ForgotPasswordView(request):
         return handleInvalidRouteJson()
 
     data = json.loads(request.body)
+    params = ["email", "password"]
+    validated_params = [param in data for param in params]
+    if not all(validated_params):
+        return JsonResponse({
+            "message": "Invalid params",
+            "http_code": "400"
+        })
     email = data['email']
     password = data['password']
+    
+    if len(password) == 0:
+        return JsonResponse({
+            "message": "Password cannot be empty",
+            "http_code": "401"
+        })
+    
     if not checkIfUserExists(email):
         return authFailedJson()
     user = getUser(email)
+    same_pass = user.check_password(password)
+    if same_pass:
+        return JsonResponse({
+            "message": "Please enter a different password",
+            "http_code": "403"
+            })
     user.set_password(password)
     user.save()
     return JsonResponse({
@@ -128,8 +173,16 @@ def ForgotPasswordView(request):
 def EmailConfirmationView(request, verification_code):
     if checkInvalidRoutes(request.method, ["GET", "PUT", "DELETE"]):
         return handleInvalidRouteJson()
+    
+    if len(verification_code) == 0:
+        return JsonResponse({
+                "message": "No verification code specified",
+                "http_code": "401"
+            })
+    
     if isInvalidVerificationCode(verification_code):
         return verificationFailedJson()
+    
     user = getUserFromVerificationCode(verification_code)
     user.validate_status = 1
     user.validate_time = datetime.now()
@@ -144,7 +197,7 @@ def GetAdminUsersView(request):
         return handleInvalidRouteJson()
     data = CustomUser.objects.filter(admin = 1).values()
     return JsonResponse({
-                "data": list(data),
+                "data": [user['id'] for user in data],
                 "http_code": "200"
             })
 
@@ -153,15 +206,27 @@ def GetUnvalidatedUsersView(request):
         return handleInvalidRouteJson()
     data = CustomUser.objects.filter(validate_status = 0).values()
     return JsonResponse({
-                "data": list(data),
+                "data": [user['id'] for user in data],
                 "http_code": "200"
             })
 def CreateSubCategoryView(request):
     if checkInvalidRoutes(request.method, ["GET", "PUT", "DELETE"]):
         return handleInvalidRouteJson()
     data = json.loads(request.body)
+    params = ["name", "user_id"]
+    validated_params = [param in data for param in params]
+    if not all(validated_params):
+        return JsonResponse({
+            "message": "Invalid params",
+            "http_code": "401"
+        })
     name = data['name']
     user_id = data['user_id']
+    if type(user_id) != int:
+        return JsonResponse({
+                "message": "Please enter a valid user id",
+                "http_code": 401
+            })
     user = getUserById(user_id)
     subcategory = SubCategory(name = name, user_id = user)
     subcategory.save()
@@ -192,50 +257,125 @@ def DeleteSubCategoryView(request):
                 "http_code": "204"
             })
 
-#TODO: 
 def CreateOrderView(request):
-    pass
+    if checkInvalidRoutes(request.method, ["GET", "PUT", "DELETE"]):
+        return handleInvalidRouteJson()
+    data = json.loads(request.body)
+    params = ["buyer_id", "seller_id", "item_id", "quantity", "status", 'txid']
+    validated_params = [param in data for param in params]
+    if not all(validated_params):
+        return JsonResponse({
+            "message": "Invalid params",
+            "http_code": "401"
+        })
+    
+    buyer_id = getUserById(data['buyer_id'])
+    seller_id = getUserById(data['seller_id'])
+    item_id = getItemById(data['item_id'])
+    quantity = data['quantity']
+    status = data['status']
+    transaction_id = data['txid']
+    
+    txid = Transaction(transaction_id)
+    txid.save()
+    if buyer_id == seller_id:
+        return JsonResponse({
+                "message": "Buyer cannot be the seller",
+                "http_code": "401"
+            })
+    
+    order = Order(buyer_id = buyer_id, seller_id = seller_id, item_id = item_id, quantity = quantity, status = status, transaction_id = txid)
+    order.save()
+    print(order.id)
+    return JsonResponse({
+            "message": order.id,
+            "http_code": 201
+        })
 
-#TODO: 
-def UpdateOrderView(request):
-    pass
 
 def GetOrderView(request):
     if checkInvalidRoutes(request.method, ["POST", "PUT", "DELETE"]):
         return handleInvalidRouteJson()
-    data = json.loads(request.body)
+    data = request.GET
+    params = ["id"]
+    validated_params = [param in data for param in params]
+    if not all(validated_params):
+        return JsonResponse({
+            "message": "Invalid params",
+            "http_code": "401"
+        })
+    
     order_id = data['id']
     result = Order.objects.filter(id = order_id).values()
     return JsonResponse({
                 "data": list(result),
                 "http_code": "200"
             })
-#TODO:
-def GetOrdersOfBuyer(request):
-    pass
 
-#TODO:
+def GetOrdersOfBuyer(request):
+    if checkInvalidRoutes(request.method, ["POST", "PUT", "DELETE"]):
+        return handleInvalidRouteJson()
+    data = request.GET
+    params = ["id"]
+    validated_params = [param in data for param in params]
+    if not all(validated_params):
+        return JsonResponse({
+            "message": "Invalid params",
+            "http_code": "401"
+        })
+    
+    buyer_id = data['id']
+    result = Order.objects.filter(buyer_id = buyer_id).values()
+    return JsonResponse({
+                "data": list(result),
+                "http_code": "200"
+            })
+
 def GetOrdersOfSeller(request):
-    pass
+    if checkInvalidRoutes(request.method, ["POST", "PUT", "DELETE"]):
+        return handleInvalidRouteJson()
+    data = request.GET
+    params = ["id"]
+    validated_params = [param in data for param in params]
+    if not all(validated_params):
+        return JsonResponse({
+            "message": "Invalid params",
+            "http_code": "401"
+        })
+    
+    seller_id = data['id']
+    result = Order.objects.filter(buyer_id = seller_id).values()
+    return JsonResponse({
+                "data": list(result),
+                "http_code": "200"
+            })
     
 def CreateItemView(request):
     if checkInvalidRoutes(request.method, ["GET", "PUT", "DELETE"]):
         return handleInvalidRouteJson()
     data = json.loads(request.body)
+    params = ["category", "name", "price", "stock", "description", 'discount', "subcategory_id", "user_id"]
+    validated_params = [param in data for param in params]
+    if not all(validated_params):
+        return JsonResponse({
+            "message": "Invalid params",
+            "http_code": "401"
+        })
+    
     category = data['category']
     name = data['name']
     price = data['price']
     stock = data['stock']
     desc = data['description']
     discount = data['discount']
-    subcategory_id = data['subcategory_id']
-    user_id = data['user_id']
+    subcategory_id = getSubCategoryFromId(data['subcategory_id'])
+    user_id = getUserById(data['user_id'])
     image = ""
     
-    item = Item(category = category, name = name, image = image, price = price, stock = stock, desc = desc, discount = discount, subcategory_id = subcategory_id, user_id = user_id)
+    item = Item(category = category, name = name, image = image, price = price, stock = stock, description = desc, discount = discount, subcategory_id = subcategory_id, user_id = user_id)
     item.save()
     return JsonResponse({
-            "data": item,
+            "data": item.id,
             "http_code": "201"
         })
 
@@ -275,7 +415,14 @@ def UpdateItemView(request):
 def GetItemView(request):
     if checkInvalidRoutes(request.method, ["PUT", "POST", "DELETE"]):
         return handleInvalidRouteJson()
-    data = json.loads(request.body)
+    data = request.GET
+    params = ["item_id"]
+    validated_params = [param in data for param in params]
+    if not all(validated_params) or type(data['item_id']) != int:
+        return JsonResponse({
+            "message": "Invalid params",
+            "http_code": "401"
+        })
     item_id = data['item_id']
     item_list = Item.objects.filter(id = item_id)
     if not item_list:
@@ -285,7 +432,7 @@ def GetItemView(request):
         })
     item = item_list[0]
     return JsonResponse({
-        "data": item,
+        "data": item.id,
         "http_code": "200"
     })
 
@@ -293,8 +440,21 @@ def DeleteItemView(request):
     if checkInvalidRoutes(request.method, ["POST", "PUT", "GET"]):
         return handleInvalidRouteJson()
     data = json.loads(request.body)
+    params = ["item_id"]
+    validated_params = [param in data for param in params]
+    if not all(validated_params) or type(data['item_id']) != int:
+        return JsonResponse({
+            "message": "Invalid params",
+            "http_code": "401"
+        })
     item_id = data['item_id']
-    Item.objects.filter(id = item_id).delete()
+    filtered_item = Item.objects.filter(id = item_id)
+    if not filtered_item:
+        return JsonResponse({
+                "message": "Item not found",
+                "http_code": "404"
+            })
+    filtered_item.delete()
     return JsonResponse({
             "http_code": "204"
     })
@@ -305,7 +465,6 @@ def TransferTokens(request):
     :param request: http post request. Body contains sender email, receiver email, and amount
     :return: http response with transaction hash
     """
-    # TODO: JWT TOKEN
 
     # only allow POST request
     if checkInvalidRoutes(request.method, ["GET", "PUT", "DELETE"]):
